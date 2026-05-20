@@ -19,11 +19,21 @@ process_single() {
            --arg sid "$(jq -r '.global.reality_short_id' "$BASE_DIR/metadata.json")" \
            '.users[0].uuid = $uuid | .tls.reality.handshake = $dest | .tls.reality.public_key = $pk | .tls.reality.short_id = $sid' \
            "$proto_file" > "$BASE_DIR/protocols/${proto_name}.tmp"
-    else
-        jq --arg cred "$(jq -r ".protocols.$proto_name | .uuid // .password" "$BASE_DIR/metadata.json")" \
-           --arg domain "$(jq -r '.global.domain' "$BASE_DIR/metadata.json")" \
-           '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end) | .tls.server_name = $domain' \
-           "$proto_file" > "$BASE_DIR/protocols/${proto_name}.tmp"
+else
+        # 增加对 XHTTP 协议的特殊判断
+        if [[ "$proto_name" == *"xhttp"* ]]; then
+            jq --arg cred "$(jq -r ".protocols.$proto_name | .uuid // .password" "$BASE_DIR/metadata.json")" \
+               --arg domain "$(jq -r '.global.domain' "$BASE_DIR/metadata.json")" \
+               --arg path "$(jq -r '.global.xhttp_path' "$BASE_DIR/metadata.json")" \
+               '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end) | .transport.path = $path | .tls.server_name = $domain' \
+               "$proto_file" > "$BASE_DIR/protocols/${proto_name}.tmp"
+        else
+            # 原有的通用 TLS 分支
+            jq --arg cred "$(jq -r ".protocols.$proto_name | .uuid // .password" "$BASE_DIR/metadata.json")" \
+               --arg domain "$(jq -r '.global.domain' "$BASE_DIR/metadata.json")" \
+               '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end) | .tls.server_name = $domain' \
+               "$proto_file" > "$BASE_DIR/protocols/${proto_name}.tmp"
+        fi
     fi
 }
 
@@ -40,20 +50,51 @@ deploy() {
         log_error "校验失败，已回滚。"
     fi
     rm -f "$BASE_DIR/protocols/"*.tmp
+
+# 在 process_single 中生成特定文件后：
+# 执行合并逻辑时，建议改为只针对当前的 tmp 文件（或者确保 process_single 逻辑是单次任务）
 }
 
 # 菜单入口
-echo -e "${BLUE}1) vless_reality_vision 2) vless_reality_xhttp 3) vless_ws_tls 4) vless_grpc_tls 5) vless_xhttp_tls 6) trojan_ws_tls 7) trojan_grpc_tls 8) 全部部署${NC}"
-read -p "选择: " choice
+show_menu() {
+    clear
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${YELLOW}SING-BOX 协议管理器 v1.0 | 系统工具控制台${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${GREEN}>> 协议部署模块${NC}"
+    echo -e "  [1] VLESS-REALITY-Vision"
+    echo -e "  [2] VLESS-REALITY-XHTTP"
+    echo -e "  [3] VLESS-WS-TLS"
+    echo -e "  [4] VLESS-GRPC-TLS"
+    echo -e "  [5] VLESS-XHTTP-TLS"
+    echo -e "  [6] TROJAN-WS-TLS"
+    echo -e "  [7] TROJAN-GRPC-TLS"
+    echo -e "  ${GREEN}>> 系统维护模块${NC}"
+    echo -e "  [c] 批量部署全部协议"
+    echo -e "  [v] 查看流量统计 (vnstat)"
+    echo -e "  [b] 启用 TCP BBR 加速"
+    echo -e "  [q] 退出控制台"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
 
-case $choice in
-    1) process_single "vless_reality_vision"; deploy ;;
-    2) process_single "vless_reality_xhttp"; deploy ;;
-    3) process_single "vless_ws_tls"; deploy ;;
-    4) process_single "vless_grpc_tls"; deploy ;;
-    5) process_single "vless_xhttp_tls"; deploy ;;
-    6) process_single "trojan_ws_tls"; deploy ;;
-    7) process_single "trojan_grpc_tls"; deploy ;;
-    8) for f in "$BASE_DIR"/protocols/*.json; do process_single "$(basename "$f" .json)"; done; deploy ;;
-    *) log_error "退出"; exit 1 ;;
-esac
+
+# 进入循环，实现菜单的可持续交互
+while true; do
+    show_menu
+    read -p "指令: " choice
+    case $choice in
+        1) process_single "vless_reality_vision"; deploy ;;
+        2) process_single "vless_reality_xhttp"; deploy ;;
+        3) process_single "vless_ws_tls"; deploy ;;
+        4) process_single "vless_grpc_tls"; deploy ;;
+        5) process_single "vless_xhttp_tls"; deploy ;;
+        6) process_single "trojan_ws_tls"; deploy ;;
+        7) process_single "trojan_grpc_tls"; deploy ;;
+        c) for f in "$BASE_DIR"/protocols/*.json; do process_single "$(basename "$f" .json)"; done; deploy ;;
+        v) show_traffic ;;
+        b) enable_bbr ;;
+        q) exit 0 ;;
+        *) echo "无效指令" ;;
+    esac
+    read -p "回车继续..."
+done
