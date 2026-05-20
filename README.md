@@ -49,7 +49,7 @@ wget -N https://raw.githubusercontent.com/linuxhobby/singbox-install/main/instal
 
 
 ---
-# 🔗 Xray 协议矩阵技术特性详解
+# 🔗 sing-box 协议矩阵技术特性详解
 
 | 协议类型 | 特点 |
 | :--- | :--- |
