@@ -1,3 +1,3 @@
-# 接收 base.json 作为输入流
-# 将后续传入的协议片段对象合并至 inbounds 数组中
-.inbounds += [.[1:] | .[]]
+# 接收 base.json (作为 .[0]) 和所有协议片段 (作为 .[1:])
+# 合并至 base.json 的 inbounds 数组中
+.[0] | .inbounds += [.[1:] | .[]]
