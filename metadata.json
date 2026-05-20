@@ -1,18 +1,23 @@
 {
-  "_comment": "将军阁下的核心配置数据库，严禁随意删除或更改结构",
+  "_comment": "核心配置数据库，可通过菜单 [i] 初始化向导生成",
   "global": {
+    "server_ip": "",
     "domain": "yourdomain.com",
     "dest_reality": "www.google.com:443",
     "reality_public_key": "YOUR_PUBLIC_KEY",
-    "reality_short_id": "0123456789abcdef"
+    "reality_private_key": "YOUR_PRIVATE_KEY",
+    "reality_short_id": "0123456789abcdef",
+    "xhttp_path": "/xhttp",
+    "ws_path": "/ws",
+    "trojan_ws_path": "/trojan-ws"
   },
   "protocols": {
-    "vless_reality_vision": { "uuid": "YOUR_UUID_1" },
-    "vless_reality_xhttp": { "uuid": "YOUR_UUID_2" },
-    "vless_ws_tls": { "uuid": "YOUR_UUID_3" },
-    "vless_grpc_tls": { "uuid": "YOUR_UUID_4" },
-    "vless_xhttp_tls": { "uuid": "YOUR_UUID_5" },
-    "trojan_ws_tls": { "password": "YOUR_PASSWORD_1" },
-    "trojan_grpc_tls": { "password": "YOUR_PASSWORD_2" }
+    "vless_reality_vision": { "uuid": "YOUR_UUID_1", "port": 10001 },
+    "vless_reality_xhttp": { "uuid": "YOUR_UUID_2", "port": 10002 },
+    "vless_ws_tls": { "uuid": "YOUR_UUID_3", "port": 10003 },
+    "vless_grpc_tls": { "uuid": "YOUR_UUID_4", "port": 10004 },
+    "vless_xhttp_tls": { "uuid": "YOUR_UUID_5", "port": 10005 },
+    "trojan_ws_tls": { "password": "YOUR_PASSWORD_1", "port": 10006 },
+    "trojan_grpc_tls": { "password": "YOUR_PASSWORD_2", "port": 10007 }
   }
 }
