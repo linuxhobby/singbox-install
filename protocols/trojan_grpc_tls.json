@@ -1,0 +1,19 @@
+{
+  "type": "trojan",
+  "tag": "trojan-grpc-tls",
+  "listen": "::",
+  "listen_port": 10007,
+  "users": [
+    {
+      "password": "PLACEHOLDER_PASSWORD"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "PLACEHOLDER_DOMAIN"
+  },
+  "transport": {
+    "type": "grpc",
+    "service_name": "trojan-grpc"
+  }
+}

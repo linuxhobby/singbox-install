@@ -1,0 +1,18 @@
+{
+  "_comment": "将军阁下的核心配置数据库，严禁随意删除或更改结构",
+  "global": {
+    "domain": "yourdomain.com",
+    "dest_reality": "www.google.com:443",
+    "reality_public_key": "YOUR_PUBLIC_KEY",
+    "reality_short_id": "0123456789abcdef"
+  },
+  "protocols": {
+    "vless_reality_vision": { "uuid": "YOUR_UUID_1" },
+    "vless_reality_xhttp": { "uuid": "YOUR_UUID_2" },
+    "vless_ws_tls": { "uuid": "YOUR_UUID_3" },
+    "vless_grpc_tls": { "uuid": "YOUR_UUID_4" },
+    "vless_xhttp_tls": { "uuid": "YOUR_UUID_5" },
+    "trojan_ws_tls": { "password": "YOUR_PASSWORD_1" },
+    "trojan_grpc_tls": { "password": "YOUR_PASSWORD_2" }
+  }
+}

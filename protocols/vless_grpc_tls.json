@@ -1,0 +1,19 @@
+{
+  "type": "vless",
+  "tag": "vless-grpc-tls",
+  "listen": "::",
+  "listen_port": 10004,
+  "users": [
+    {
+      "uuid": "PLACEHOLDER_UUID"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "PLACEHOLDER_DOMAIN"
+  },
+  "transport": {
+    "type": "grpc",
+    "service_name": "grpc"
+  }
+}

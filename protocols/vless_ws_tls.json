@@ -1,0 +1,19 @@
+{
+  "type": "vless",
+  "tag": "vless-ws-tls",
+  "listen": "::",
+  "listen_port": 10003,
+  "users": [
+    {
+      "uuid": "PLACEHOLDER_UUID"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "PLACEHOLDER_DOMAIN"
+  },
+  "transport": {
+    "type": "ws",
+    "path": "/ws"
+  }
+}

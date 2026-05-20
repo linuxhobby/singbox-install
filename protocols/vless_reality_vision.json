@@ -1,0 +1,21 @@
+{
+  "type": "vless",
+  "tag": "vless-reality-vision",
+  "listen": "::",
+  "listen_port": 10001,
+  "users": [
+    {
+      "uuid": "PLACEHOLDER_UUID",
+      "flow": "xtls-vision"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "reality": {
+      "enabled": true,
+      "handshake": "PLACEHOLDER_DEST",
+      "public_key": "PLACEHOLDER_PK",
+      "short_id": "PLACEHOLDER_SID"
+    }
+  }
+}

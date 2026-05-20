@@ -1,0 +1,19 @@
+{
+  "type": "trojan",
+  "tag": "trojan-ws-tls",
+  "listen": "::",
+  "listen_port": 10006,
+  "users": [
+    {
+      "password": "PLACEHOLDER_PASSWORD"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "PLACEHOLDER_DOMAIN"
+  },
+  "transport": {
+    "type": "ws",
+    "path": "/trojan-ws"
+  }
+}

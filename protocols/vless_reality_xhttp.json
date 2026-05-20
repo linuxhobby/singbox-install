@@ -1,0 +1,23 @@
+{
+  "type": "vless",
+  "tag": "vless-reality-xhttp",
+  "listen": "::",
+  "listen_port": 10002,
+  "users": [
+    {
+      "uuid": "PLACEHOLDER_UUID"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "reality": {
+      "enabled": true,
+      "handshake": "PLACEHOLDER_DEST",
+      "public_key": "PLACEHOLDER_PK",
+      "short_id": "PLACEHOLDER_SID"
+    }
+  },
+  "transport": {
+    "type": "xhttp"
+  }
+}

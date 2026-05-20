@@ -1,0 +1,18 @@
+{
+  "type": "vless",
+  "tag": "vless-xhttp-tls",
+  "listen": "::",
+  "listen_port": 10005,
+  "users": [
+    {
+      "uuid": "PLACEHOLDER_UUID"
+    }
+  ],
+  "tls": {
+    "enabled": true,
+    "server_name": "PLACEHOLDER_DOMAIN"
+  },
+  "transport": {
+    "type": "xhttp"
+  }
+}
