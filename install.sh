@@ -2,8 +2,8 @@
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_TMP="/tmp/sing-box-config.tmp"
-CONFIG_FINAL="/usr/local/etc/sing-box/config.json"
-SINGBOX_BIN="/usr/local/bin/sing-box"
+CONFIG_FINAL=""
+SINGBOX_BIN=""
 
 # 7 种协议（顺序与菜单一致）
 PROTOCOLS=(
@@ -28,6 +28,7 @@ PROTOCOL_LABELS=(
 
 source "$BASE_DIR/lib/utils.sh"
 check_dependencies
+resolve_config_final
 ensure_config_dir
 
 # 将协议模板注入 metadata 参数，生成 .tmp
@@ -45,21 +46,39 @@ process_single() {
         return 1
     fi
 
+    local listen_port
+    listen_port=$(jq -r ".protocols.${proto_name}.port // 443" "$meta")
+    [[ "$listen_port" == "null" || -z "$listen_port" ]] && listen_port=443
+
     if [[ "$proto_name" == *"reality"* ]]; then
+        local dest hs_server hs_port
+        dest=$(jq -r '.global.dest_reality' "$meta")
+        if [[ "$dest" == *:* ]]; then
+            hs_port="${dest##*:}"
+            hs_server="${dest%:*}"
+        else
+            hs_server="$dest"
+            hs_port=443
+        fi
         jq --arg uuid "$(jq -r ".protocols.${proto_name}.uuid" "$meta")" \
-           --arg dest "$(jq -r '.global.dest_reality' "$meta")" \
-           --arg pk "$(jq -r '.global.reality_public_key' "$meta")" \
+           --arg srv "$hs_server" \
+           --argjson hs_port "$hs_port" \
+           --argjson listen_port "$listen_port" \
+           --arg sk "$(jq -r '.global.reality_private_key' "$meta")" \
            --arg sid "$(jq -r '.global.reality_short_id' "$meta")" \
            '.users[0].uuid = $uuid
-            | .tls.reality.handshake = $dest
-            | .tls.reality.public_key = $pk
-            | .tls.reality.short_id = $sid' \
+            | .listen_port = $listen_port
+            | .tls.reality.handshake = {server: $srv, server_port: $hs_port}
+            | .tls.reality.private_key = $sk
+            | .tls.reality.short_id = [$sid]' \
            "$proto_file" > "$out_file"
     elif [[ "$proto_name" == *"xhttp"* ]]; then
         jq --arg cred "$(jq -r ".protocols.${proto_name} | .uuid // .password" "$meta")" \
            --arg domain "$(jq -r '.global.domain' "$meta")" \
            --arg path "$(jq -r '.global.xhttp_path' "$meta")" \
+           --argjson listen_port "$listen_port" \
            '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end)
+            | .listen_port = $listen_port
             | .transport.path = $path
             | .tls.server_name = $domain' \
            "$proto_file" > "$out_file"
@@ -73,14 +92,18 @@ process_single() {
         jq --arg cred "$(jq -r ".protocols.${proto_name} | .uuid // .password" "$meta")" \
            --arg domain "$(jq -r '.global.domain' "$meta")" \
            --arg wspath "$ws_path" \
+           --argjson listen_port "$listen_port" \
            '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end)
+            | .listen_port = $listen_port
             | .transport.path = $wspath
             | .tls.server_name = $domain' \
            "$proto_file" > "$out_file"
     else
         jq --arg cred "$(jq -r ".protocols.${proto_name} | .uuid // .password" "$meta")" \
            --arg domain "$(jq -r '.global.domain' "$meta")" \
+           --argjson listen_port "$listen_port" \
            '.users[0] |= (if .uuid then .uuid = $cred else .password = $cred end)
+            | .listen_port = $listen_port
             | .tls.server_name = $domain' \
            "$proto_file" > "$out_file"
     fi
@@ -126,17 +149,38 @@ deploy() {
         return 1
     fi
 
-    if "$SINGBOX_BIN" check -c "$CONFIG_TMP"; then
-        mv "$CONFIG_TMP" "$CONFIG_FINAL"
-        systemctl enable sing-box 2>/dev/null
-        systemctl restart sing-box
-        rm -f "$backup"
-        rm -f "$BASE_DIR/protocols/"*.tmp
-        log_info "部署成功。"
-        return 0
+    if ! ensure_singbox; then
+        log_error "sing-box 未安装，无法校验配置。"
+        [[ -n "$backup" ]] && mv "$backup" "$CONFIG_FINAL"
+        return 1
     fi
 
-    log_error "配置校验失败，已回滚。"
+    if "$SINGBOX_BIN" check -c "$CONFIG_TMP" 2>&1; then
+        mv "$CONFIG_TMP" "$CONFIG_FINAL"
+        sync_stale_config_paths
+        systemctl enable sing-box 2>/dev/null
+        systemctl daemon-reload 2>/dev/null
+        systemctl restart sing-box
+        sleep 1
+        rm -f "$backup"
+        rm -f "$BASE_DIR/protocols/"*.tmp
+        if verify_deploy_result "$only_proto"; then
+            local deploy_port=""
+            [[ -n "$only_proto" ]] && deploy_port=$(get_deployed_port "$only_proto")
+            open_config_ports
+            if check_service_health "$deploy_port"; then
+                log_info "部署成功，服务已加载: ${CONFIG_FINAL}"
+                log_warn "若仍无法连接，请在云服务商控制台安全组放行对应 TCP 端口。"
+                return 0
+            fi
+            log_warn "配置已写入但服务/端口检查未通过，请根据上方日志排查。"
+            return 1
+        fi
+        log_error "配置已写入但验证未通过，请检查 systemd 使用的配置路径。"
+        return 1
+    fi
+
+    log_error "配置校验失败，已回滚。详情见上方 sing-box check 输出。"
     rm -f "$CONFIG_TMP"
     if [[ -n "$backup" ]]; then
         mv "$backup" "$CONFIG_FINAL"
@@ -159,6 +203,11 @@ install_protocol() {
     done
 
     log_info "正在安装 ${label:-$proto_name} ..."
+
+    if ! ensure_metadata "$proto_name"; then
+        return 1
+    fi
+
     rm -f "$BASE_DIR/protocols/"*.tmp
 
     if ! process_single "$proto_name"; then
@@ -168,31 +217,7 @@ install_protocol() {
         return 1
     fi
 
-    log_info "${label:-$proto_name} 安装完成，节点链接："
-    show_protocol_info "$proto_name"
-}
-
-install_all_protocols() {
-    log_info "正在批量安装全部 7 种协议 ..."
-    rm -f "$BASE_DIR/protocols/"*.tmp
-
-    local proto
-    for proto in "${PROTOCOLS[@]}"; do
-        if ! process_single "$proto"; then
-            log_error "协议 ${proto} 处理失败，已中止批量安装。"
-            rm -f "$BASE_DIR/protocols/"*.tmp
-            return 1
-        fi
-    done
-
-    if ! deploy; then
-        return 1
-    fi
-
-    log_info "全部协议已部署，节点链接如下："
-    for proto in "${PROTOCOLS[@]}"; do
-        show_protocol_info "$proto"
-    done
+    show_protocol_info "$proto_name" "${label:-}"
 }
 
 # 7 种协议独立安装入口
@@ -209,6 +234,8 @@ show_menu() {
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${YELLOW}SING-BOX 协议管理器 v1.1 | 系统工具控制台${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    show_system_status
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${GREEN}>> 协议安装模块（7 种）${NC}"
     echo -e "  [1] VLESS-REALITY-Vision"
     echo -e "  [2] VLESS-REALITY-XHTTP"
@@ -218,8 +245,8 @@ show_menu() {
     echo -e "  [6] TROJAN-WS-TLS"
     echo -e "  [7] TROJAN-GRPC-TLS"
     echo -e "  ${GREEN}>> 系统维护模块${NC}"
-    echo -e "  [c] 批量安装全部协议"
-    echo -e "  [i] 初始化配置向导 (metadata.json)"
+    echo -e "  [c] 查看当前协议信息与链接"
+    echo -e "  [i] 重新运行配置向导 (安装协议时会自动检测)"
     echo -e "  [v] 查看流量统计 (vnstat)"
     echo -e "  [b] 启用 TCP BBR 加速"
     echo -e "  [d] 卸载 sing-box"
@@ -238,7 +265,7 @@ while true; do
         5) install_vless_xhttp_tls ;;
         6) install_trojan_ws_tls ;;
         7) install_trojan_grpc_tls ;;
-        c) install_all_protocols ;;
+        c) view_installed_protocols ;;
         i) setup_metadata ;;
         v) show_traffic ;;
         b) enable_bbr ;;

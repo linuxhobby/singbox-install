@@ -1,8 +1,8 @@
 {
   "type": "vless",
   "tag": "vless-ws-tls",
-  "listen": "::",
-  "listen_port": 10003,
+  "listen": "0.0.0.0",
+  "listen_port": 443,
   "users": [
     {
       "uuid": "PLACEHOLDER_UUID"

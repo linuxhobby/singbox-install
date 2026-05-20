@@ -1,5 +1,4 @@
 {
-  "_comment": "由将军阁下维护，此处的备注不会被脚本自动修改",
   "log": {
     "level": "info",
     "output": "/var/log/sing-box/access.log"
@@ -7,8 +6,9 @@
   "dns": {
     "servers": [
       {
-        "tag": "google",
-        "address": "8.8.8.8"
+        "type": "udp",
+        "tag": "remote-dns",
+        "server": "8.8.8.8"
       }
     ]
   },

@@ -1,8 +1,8 @@
 {
   "type": "trojan",
   "tag": "trojan-ws-tls",
-  "listen": "::",
-  "listen_port": 10006,
+  "listen": "0.0.0.0",
+  "listen_port": 443,
   "users": [
     {
       "password": "PLACEHOLDER_PASSWORD"

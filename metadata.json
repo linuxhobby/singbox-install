@@ -3,7 +3,7 @@
   "global": {
     "server_ip": "",
     "domain": "yourdomain.com",
-    "dest_reality": "www.google.com:443",
+    "dest_reality": "www.bing.com:443",
     "reality_public_key": "YOUR_PUBLIC_KEY",
     "reality_private_key": "YOUR_PRIVATE_KEY",
     "reality_short_id": "0123456789abcdef",
@@ -12,12 +12,12 @@
     "trojan_ws_path": "/trojan-ws"
   },
   "protocols": {
-    "vless_reality_vision": { "uuid": "YOUR_UUID_1", "port": 10001 },
-    "vless_reality_xhttp": { "uuid": "YOUR_UUID_2", "port": 10002 },
-    "vless_ws_tls": { "uuid": "YOUR_UUID_3", "port": 10003 },
-    "vless_grpc_tls": { "uuid": "YOUR_UUID_4", "port": 10004 },
-    "vless_xhttp_tls": { "uuid": "YOUR_UUID_5", "port": 10005 },
-    "trojan_ws_tls": { "password": "YOUR_PASSWORD_1", "port": 10006 },
-    "trojan_grpc_tls": { "password": "YOUR_PASSWORD_2", "port": 10007 }
+    "vless_reality_vision": { "uuid": "YOUR_UUID_1", "port": 443 },
+    "vless_reality_xhttp": { "uuid": "YOUR_UUID_2", "port": 443 },
+    "vless_ws_tls": { "uuid": "YOUR_UUID_3", "port": 443 },
+    "vless_grpc_tls": { "uuid": "YOUR_UUID_4", "port": 443 },
+    "vless_xhttp_tls": { "uuid": "YOUR_UUID_5", "port": 443 },
+    "trojan_ws_tls": { "password": "YOUR_PASSWORD_1", "port": 443 },
+    "trojan_grpc_tls": { "password": "YOUR_PASSWORD_2", "port": 443 }
   }
 }

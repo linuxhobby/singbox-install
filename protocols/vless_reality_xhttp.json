@@ -1,8 +1,8 @@
 {
   "type": "vless",
   "tag": "vless-reality-xhttp",
-  "listen": "::",
-  "listen_port": 10002,
+  "listen": "0.0.0.0",
+  "listen_port": 443,
   "users": [
     {
       "uuid": "PLACEHOLDER_UUID"
@@ -12,9 +12,12 @@
     "enabled": true,
     "reality": {
       "enabled": true,
-      "handshake": "PLACEHOLDER_DEST",
-      "public_key": "PLACEHOLDER_PK",
-      "short_id": "PLACEHOLDER_SID"
+      "handshake": {
+        "server": "www.bing.com",
+        "server_port": 443
+      },
+      "private_key": "PLACEHOLDER_SK",
+      "short_id": ["PLACEHOLDER_SID"]
     }
   },
   "transport": {

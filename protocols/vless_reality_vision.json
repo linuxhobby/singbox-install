@@ -1,21 +1,24 @@
 {
   "type": "vless",
   "tag": "vless-reality-vision",
-  "listen": "::",
-  "listen_port": 10001,
+  "listen": "0.0.0.0",
+  "listen_port": 443,
   "users": [
     {
       "uuid": "PLACEHOLDER_UUID",
-      "flow": "xtls-vision"
+      "flow": "xtls-rprx-vision"
     }
   ],
   "tls": {
     "enabled": true,
     "reality": {
       "enabled": true,
-      "handshake": "PLACEHOLDER_DEST",
-      "public_key": "PLACEHOLDER_PK",
-      "short_id": "PLACEHOLDER_SID"
+      "handshake": {
+        "server": "www.bing.com",
+        "server_port": 443
+      },
+      "private_key": "PLACEHOLDER_SK",
+      "short_id": ["PLACEHOLDER_SID"]
     }
   }
 }
