@@ -4,7 +4,7 @@ sing box一键自动安装脚本
 - 2026/05/01：第一个初始版本。
 
 ## 📖 项目介绍
-# 🚀 Xray 一键安装脚本
+# 🚀 sing-box 一键安装脚本
 > 基于 **sing box ** 的多协议一键部署脚本，快速部署sing box服务端，支持 Reality / WS / gRPC / XHTTP / Trojan / VMess 等多种主流协议，开箱即用。
 
 ✔ 一键自动化安装  
