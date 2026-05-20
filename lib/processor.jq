@@ -1,3 +1,2 @@
-# 接收 base.json (作为 .[0]) 和所有协议片段 (作为 .[1:])
-# 合并至 base.json 的 inbounds 数组中
-.[0] | .inbounds += [.[1:] | .[]]
+# 输入为 jq -s 合并后的数组：[base.json, protocol1, protocol2, ...]
+. as $all | $all[0] | .inbounds += $all[1:]
