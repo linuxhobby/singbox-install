@@ -75,6 +75,15 @@ ensure_config_dir() {
     resolve_config_final
     mkdir -p "$(dirname "$CONFIG_FINAL")"
     mkdir -p /var/log/sing-box
+    # 确保 sing-box 服务有权限写入日志目录
+    local svc_user
+    svc_user=$(systemctl show sing-box -p User --value 2>/dev/null)
+    if [[ -n "$svc_user" && "$svc_user" != "root" && "$svc_user" != "(null)" ]] && id "$svc_user" &>/dev/null; then
+        chown "$svc_user":"$svc_user" /var/log/sing-box
+    elif id sing-box &>/dev/null; then
+        chown sing-box:sing-box /var/log/sing-box
+    fi
+    chmod 755 /var/log/sing-box
 }
 
 # 避免写入错误路径后服务仍读另一份默认 Shadowsocks 配置
